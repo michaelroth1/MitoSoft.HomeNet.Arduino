@@ -1,0 +1,16 @@
+{
+    "name": "MitoSoft",
+    "keywords": "ethernet, smart-home, smart, home, iot",
+    "description": "A client library for smart-home functionality. Arduino project to use HomeNet functionality, like light and blind controlling. The library works best with the Arduino Mega board.",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/michaelroth1/MitoSoft.HomeNet.Arduino"
+    },
+    "version": "1.0",
+    "exclude": "",
+    "examples": "examples/*/*.ino",
+    "frameworks": "arduino",
+    "platforms": [
+        "arduino mega board"
+     ]
+}
