@@ -43,7 +43,6 @@ Blind controlling sketch:
 
 ```c++
 #include <MitoSoft.h>
-#include <StringHelper.h>
 
 DebouncingInput shutter1Pos(23, INPUT_PULLUP, 50);
 DebouncingInput shutter1DownTaster(24, INPUT_PULLUP, 50);
@@ -89,38 +88,40 @@ void loop() {
 Beispielsketch für die Verwendung mit MQTT (mit Paket <ArduinoMqttClient.h>):
 
 ```c++
+/*
+ Name:		SimpleMqttUsing.ino
+ Created:	1/21/2020 8:49:25 PM
+ Author:	M. Roth
+*/
+
 #include <SPI.h>
 #include <Ethernet.h>
-#include <PubSubClient.h>
+#include <Arduino.h>
 #include <MitoSoft.h>
 
-// Netzwerk-Konfiguration
+// network configuration
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 IPAddress broker(192, 168, 2, 100);
 
 EthernetClient ethClient;
 EthernetHelper ethHelper(mac, ethClient, broker);
 
-PubSubClient client(broker, 1883, ethClient);
-PubSubHelper mqttHelper(client, 15000, true);
+PubSubClient mqttClient(broker, 1883, ethClient);
+PubSubHelper mqttHelper(mqttClient);
 
 unsigned long lastMillis = 0;
 
-// the setup function runs once when you press reset or power the board
 void setup() {
     Serial.begin(9600);
-    Serial.println("start MqttUsing.ino");
+    Serial.println("start SimpleMqttUsing.ino");
 
     ethHelper.dhcpSetup();
 
-	  delay(2000);
-    
     mqttHelper.connect("Room1Controller", "Room1Controller");
 
     Serial.println("start loop");
 }
 
-// the loop function runs over and over again until power down or reset
 void loop() {
 
     String t = mqttHelper.getSubtopic();
