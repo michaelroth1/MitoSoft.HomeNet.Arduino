@@ -69,10 +69,8 @@ void loop() {
 		shutter1.runUp();
 	}
 	else if (shutter1Pos.risingEdge()) {
-		String message = "60;50";
-		double absPos = StringHelper().split(message, ';', 0).toDouble();
-		double finPos = StringHelper().split(message, ';', 1).toDouble(); 
-		shutter1.setPosition(absPos, finPos);
+		//blind runs to absolute position of 60% and opens the fins to 50%
+		shutter1.setPosition(60, 50);
 	}
 
 	if (shutter1.started()) {
