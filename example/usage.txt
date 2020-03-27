@@ -1,0 +1,44 @@
+
+#include <SPI.h>
+#include <Ethernet.h>
+#include <MQTT.h>
+#include <MitoSoft.h>
+
+// Netzwerk-Konfiguration
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+
+HomeNetEthernetHelper ethHelper(false);
+HomeNetMqttHelper mqttHelper(false);
+EthernetClient ethClient;
+MQTTClient mqttClient;
+
+unsigned long lastMillis = 0;
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("start programm");  
+  
+  ethHelper.dhcpSetup(mac);
+
+  mqttHelper.setup(mqttClient,"192.168.2.100", "TestClient1234564", "Controller1", ethClient);
+
+  Serial.println("start loop");
+}
+
+void loop() {
+
+  String m = mqttHelper.received("Input1");
+  if (m != ""){
+    Serial.println("Message received in MAIN LOOP: .../Input1:  " + m + ".");
+  }
+
+  // publish a message roughly every second.
+  if (millis() - lastMillis > 1000) {
+    lastMillis = millis();
+    mqttHelper.publish("Output2", "High");
+  }
+
+  mqttHelper.loop();
+
+  delay(50);
+}
