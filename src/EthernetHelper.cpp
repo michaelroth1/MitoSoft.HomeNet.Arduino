@@ -4,7 +4,7 @@
 //Beispiel: so werden statische Variablen erzeugt
 //bool EthernetHelper::_writeLog;
 
-EthernetHelper::EthernetHelper(byte mac[6], EthernetClient& ethernetClient, IPAddress gateway, unsigned long reconnectionTime = 300000, bool writeLog = false) {
+EthernetHelper::EthernetHelper(byte mac[6], EthernetClient& ethernetClient, IPAddress gateway, unsigned long reconnectionTime, bool writeLog) {
 	this->_mac = mac;
 	this->_writeLog = writeLog;
 	this->_client = &ethernetClient;
@@ -19,19 +19,35 @@ void EthernetHelper::fixIpSetup(IPAddress ip) {
 	this->_mode = FIXIP;
 	this->_ip = ip;
 
-	Ethernet.begin(_mac, ip, _gateway);
+	Ethernet.begin(_mac, ip);
 
 	if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-		writeSerial("Network error: Ethernet shield was not found");
-		return;
+		writeSerial("Ethernet shield was not found.");
 	}
-	if (Ethernet.linkStatus() == LinkOFF) {
-		writeSerial("Network error: Ethernet cable is not connected");
+	else if (Ethernet.hardwareStatus() == EthernetW5100) {
+		writeSerial("W5100 Ethernet controller detected.");
 	}
-	else {
+	else if (Ethernet.hardwareStatus() == EthernetW5200) {
+		writeSerial("W5200 Ethernet controller detected.");
+	}
+	else if (Ethernet.hardwareStatus() == EthernetW5500) {
+		writeSerial("W5500 Ethernet controller detected.");
+	}
+
+	delay(2000);
+
+	if (Ethernet.linkStatus() == Unknown) {
+		writeSerial("Link status unknown. Link status detection is only available with W5200 and W5500.");
+	}
+	else if (Ethernet.linkStatus() == LinkON) {
+		writeSerial("Link status: On");
+
 		//_client->connect(_gateway, 80);
 		String ip = String(Ethernet.localIP());
 		writeSerial("Network connected and IP assigned: IP " + ip);
+	}
+	else if (Ethernet.linkStatus() == LinkOFF) {
+		writeSerial("Link status: Off");
 	}
 }
 
@@ -40,27 +56,47 @@ void EthernetHelper::dhcpSetup() {
 
 	this->_mode = DHCP;
 
-	if (Ethernet.begin(_mac, 5000, 4000) == 0) {
-		writeSerial("Network error: Failed to configure Ethernet using DHCP");
-		// Check for Ethernet hardware present
-		if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-			writeSerial("Network error: Ethernet shield was not found");
-			while (true) {
-				delay(1); // do nothing, no point running without Ethernet hardware
-			}
-		}
-		if (Ethernet.linkStatus() == LinkOFF) {
-			writeSerial("Network error: Ethernet cable is not connected");
-		}
+	Ethernet.begin(_mac); // 5000, 4000);
+
+	if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+		writeSerial("Ethernet shield was not found.");
 	}
-	else {
+	else if (Ethernet.hardwareStatus() == EthernetW5100) {
+		writeSerial("W5100 Ethernet controller detected.");
+	}
+	else if (Ethernet.hardwareStatus() == EthernetW5200) {
+		writeSerial("W5200 Ethernet controller detected.");
+	}
+	else if (Ethernet.hardwareStatus() == EthernetW5500) {
+		writeSerial("W5500 Ethernet controller detected.");
+	}
+
+	delay(2000);
+
+	if (Ethernet.linkStatus() == Unknown) {
+		writeSerial("Link status unknown. Link status detection is only available with W5200 and W5500.");
+	}
+	else if (Ethernet.linkStatus() == LinkON) {
+		writeSerial("Link status: On");
+
 		//_client->connect(_gateway, 80);
 		String ip = String(Ethernet.localIP());
-		writeSerial("Network connected and DHCP assigned: IP " + ip);
+		writeSerial("Network connected and IP assigned: IP " + ip);
+	}
+	else if (Ethernet.linkStatus() == LinkOFF) {
+		writeSerial("Link status: Off");
 	}
 }
 
 void EthernetHelper::loop() {
+
+	if (DHCP == _mode) {
+		if (Ethernet.maintain() % 2 == 1) { //entweder 1 oder 3 (...failed) https://www.arduino.cc/en/Reference/EthernetMaintain
+			// Cable disconnected or DHCP server hosed
+			writeSerial("Network reconnecting..." + String(millis()));
+			this->dhcpSetup();
+		}
+	}
 
 	if (millis() - _actualTime > _reconnectionTime) {
 		if (!_client->connected()) {
@@ -70,9 +106,10 @@ void EthernetHelper::loop() {
 				this->fixIpSetup(_ip);
 			}
 			else { //DHCP
+				Ethernet.maintain();
 				this->dhcpSetup();
 			}
-		}		
+		}
 	}
 }
 
