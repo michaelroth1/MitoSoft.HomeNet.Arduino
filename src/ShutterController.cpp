@@ -1,6 +1,6 @@
 #include "MitoSoft.h"
 
-ShutterController::ShutterController(int upPin, int downPin, unsigned long maxRunTime, unsigned long finOpenTime = 0, int mode = STANDARD, double upReferencePos = -2.0, double downReferencePos = 102.0, int reverseTime = 500) {
+ShutterController::ShutterController(int upPin, int downPin, unsigned long maxRunTime, unsigned long finOpenTime, int mode, double upReferencePos, double downReferencePos, int reverseTime) {
 	_downPin = downPin;
 	_upPin = upPin;
 	_shutterRunTime = maxRunTime;

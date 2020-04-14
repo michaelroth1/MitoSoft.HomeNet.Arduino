@@ -1,12 +1,13 @@
-#include <SPI.h>
-#include <Ethernet.h>
-#include "Arduino.h"
-#include <ArduinoMqttClient.h>
-#include <PubSubClient.h>
-#include "StringHelper.h"
 
 #ifndef MitoSoft_h
 #define MitoSoft_h
+
+#include <SPI.h>
+#include <Ethernet.h>
+#include "Arduino.h"
+#include <PubSubClient.h>
+#include "StringHelper.h"
+#include <ArduinoMqttClient.h>
 
 const int STANDARD = 1;
 const int INVERTED = 2;
@@ -20,23 +21,20 @@ private:
 	const int DHCP = 1;
 	const int FIXIP = 2;
 
-	int _mode = DHCP;
+	int _mode = FIXIP;
 
 	byte* _mac;
 	IPAddress _ip;
-	IPAddress _gateway;
-	EthernetClient* _client = nullptr;
-
-	unsigned long _actualTime = 0;
-	unsigned long _reconnectionTime = 300000;
 
 	bool _writeLog;
 
 	void writeSerial(String text);
 
+	void disableSDCard();
+
 public:
 
-	EthernetHelper(byte mac[6], EthernetClient& ethernetClient, IPAddress gateway, unsigned long reconnectionTime = 300000, bool writeLog = false);
+	EthernetHelper(byte mac[6], bool writeLog = false);
 
 	void fixIpSetup(IPAddress ip);
 
@@ -261,7 +259,9 @@ class PubSubHelper
 {
 private:
 
-	PubSubClient* _mqttClient = nullptr;
+	static EthernetClient _ethClient;
+
+	static PubSubClient _mqttClient;
 
 	static bool _writeLog;
 	static String _topic;
@@ -270,6 +270,9 @@ private:
 	char* _clientId;
 
 	String _topicPrefix;
+
+	IPAddress _broker;
+	uint16_t _port = 1883;
 
 	unsigned long _actualTime = 0;
 	unsigned long _reconnectionTime = 15000;
@@ -284,7 +287,7 @@ public:
 
 	bool connect(char* clientId, String topicPrefix);
 
-	PubSubHelper(PubSubClient& client, unsigned long reconnectionTime = 5000, bool writeLog = false);
+	PubSubHelper(IPAddress broker, uint16_t port, unsigned long reconnectionTime = 5000, bool writeLog = false);
 
 	String getTopic();
 

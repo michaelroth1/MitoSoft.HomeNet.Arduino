@@ -2,7 +2,7 @@
 
 //https://github.com/arduino-libraries/ArduinoMqttClient
 
-MqttHelper::MqttHelper(MqttClient& client, unsigned long reconnectionTime = 5000, bool writeLog = false) {
+MqttHelper::MqttHelper(MqttClient& client, unsigned long reconnectionTime, bool writeLog) {
 	this->_mqttClient = &client;
 	this->_writeLog = writeLog;
 	this->_pollingInterval = 1000;
@@ -87,7 +87,7 @@ String MqttHelper::getMessage() {
 	return message;
 }
 
-void MqttHelper::publish(String subtopic, String message, bool retain = false) {
+void MqttHelper::publish(String subtopic, String message, bool retain) {
 	if (_mqttClient->connected()) {
 		String topic = _topicPrefix + "/Out/" + subtopic;
 		_mqttClient->beginMessage(topic, retain, 2); //TODO war ma qos Level 2

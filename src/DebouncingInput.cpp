@@ -16,7 +16,7 @@ byte DebouncingInput::getByteState() {
 	return _state;
 }
 
-DebouncingInput::DebouncingInput(byte pin, int mode = INPUT_PULLUP, unsigned long debounceTime = 50) {
+DebouncingInput::DebouncingInput(byte pin, int mode, unsigned long debounceTime) {
 	this->_pin = pin;
 	this->_pinMode = mode;
 	_lastReading = LOW;

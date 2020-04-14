@@ -1,6 +1,6 @@
 #include "MitoSoft.h"
 
-DigitalOutput::DigitalOutput(int pin, int mode = STANDARD) {
+DigitalOutput::DigitalOutput(int pin, int mode) {
 	// wir merken uns die Pins für die spätere Verwendung
 	this->_pin = pin;
 	this->_invertableOutput = new InvertableOutput(pin, mode);

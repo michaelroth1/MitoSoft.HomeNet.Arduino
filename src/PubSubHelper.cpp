@@ -1,6 +1,8 @@
 #include "MitoSoft.h"
 #include <Arduino.h>
 #include <string.h>
+#include <Ethernet.h>
+#include <PubSubClient.h>
 
 //https://github.com/knolleary/pubsubclient
 
@@ -9,6 +11,10 @@ bool PubSubHelper::_writeLog;
 String PubSubHelper::_topic;
 
 String PubSubHelper::_message;
+
+EthernetClient PubSubHelper::_ethClient;
+
+PubSubClient PubSubHelper::_mqttClient;
 
 void PubSubHelper::onMessageReceived(char* topic, byte* payload, unsigned int length)
 {
@@ -29,9 +35,11 @@ void PubSubHelper::writeSerial(String text) {
 	}
 }
 
-PubSubHelper::PubSubHelper(PubSubClient& client, unsigned long reconnectionTime, bool writeLog)
+PubSubHelper::PubSubHelper(IPAddress broker, uint16_t port, unsigned long reconnectionTime, bool writeLog)
 {
-	this->_mqttClient = &client;
+
+	this->_broker = broker;
+	this->_port = port;
 	this->_writeLog = writeLog;
 	this->_reconnectionTime = reconnectionTime;
 	this->_actualTime = millis();
@@ -39,18 +47,22 @@ PubSubHelper::PubSubHelper(PubSubClient& client, unsigned long reconnectionTime,
 
 bool PubSubHelper::connect(char* clientId, String topicPrefix) {
 
+	this->_ethClient = EthernetClient();
+
+	this->_mqttClient = PubSubClient(_broker, _port, this->_ethClient);
+
 	this->_topicPrefix = topicPrefix;
 	this->_clientId = clientId;
 
-	if (!_mqttClient->connect(clientId)) {
-		writeSerial("MQTT connection failed: Error code " + String(_mqttClient->state()));
+	if (!_mqttClient.connect(clientId)) {
+		writeSerial("MQTT connection failed: Error code " + String(_mqttClient.state()));
 
 		return false;
 	}
 	else {
 		writeSerial("MQTT connected to broker: " + (String)_clientId);
 
-		_mqttClient->setCallback(*onMessageReceived); //eventuell die setCallback Funktion in Konstruktor verlagern
+		_mqttClient.setCallback(*onMessageReceived); //eventuell die setCallback Funktion in Konstruktor verlagern
 
 		String topic = topicPrefix + "/In/#";
 
@@ -90,7 +102,7 @@ void PubSubHelper::subscribe(String topic)
 	char t[topic.length() + 1];
 	topic.toCharArray(t, topic.length() + 1);
 
-	_mqttClient->subscribe(t, 0);
+	_mqttClient.subscribe(t, 0);
 
 	writeSerial("MQTT subscription: Topic " + (String)topic);
 }
@@ -99,8 +111,7 @@ void PubSubHelper::subscribe(String topic)
 //QOS0 => Nachrichten maximal einmal liefern (Fire and forget)
 void PubSubHelper::publish(String subtopic, String message, bool retain = false)
 {
-	if (_mqttClient->connected()) {
-
+	if (_mqttClient.connected()) {
 		String topic = _topicPrefix + "/Out/" + subtopic;
 
 		char t[topic.length() + 1];
@@ -109,7 +120,7 @@ void PubSubHelper::publish(String subtopic, String message, bool retain = false)
 		char m[message.length() + 1];
 		message.toCharArray(m, message.length() + 1);
 
-		_mqttClient->publish(t, m, retain);
+		_mqttClient.publish(t, m, retain);
 
 		writeSerial("MQTT message published: Topic " + (String)subtopic + "; Message " + (String)message);
 	}
@@ -118,7 +129,7 @@ void PubSubHelper::publish(String subtopic, String message, bool retain = false)
 //nonblocking reconnect
 //https://github.com/knolleary/pubsubclient/blob/v2.7/examples/mqtt_reconnect_nonblocking/mqtt_reconnect_nonblocking.ino
 bool PubSubHelper::loop() {
-	if (!_mqttClient->connected()) {
+	if (!_mqttClient.connected()) {
 		if (millis() - _actualTime > _reconnectionTime) {
 			_actualTime = millis();
 			writeSerial("MQTT reconnecting..." + String(millis()));
@@ -129,7 +140,7 @@ bool PubSubHelper::loop() {
 		}
 	}
 	else {
-		_mqttClient->loop(); // Client connected
+		_mqttClient.loop(); // Client connected
 	}
 
 	return true;

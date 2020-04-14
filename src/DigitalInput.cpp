@@ -1,6 +1,6 @@
 #include "MitoSoft.h"
 
-DigitalInput::DigitalInput(int pin, int mode = INPUT_PULLUP) {
+DigitalInput::DigitalInput(int pin, int mode) {
 	this->_pin = pin; // wir merken uns die Pins für die spätere Verwendung
 	this->_pinMode = mode;
 

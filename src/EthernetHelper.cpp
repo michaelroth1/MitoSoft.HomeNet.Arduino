@@ -4,13 +4,9 @@
 //Beispiel: so werden statische Variablen erzeugt
 //bool EthernetHelper::_writeLog;
 
-EthernetHelper::EthernetHelper(byte mac[6], EthernetClient& ethernetClient, IPAddress gateway, unsigned long reconnectionTime, bool writeLog) {
+EthernetHelper::EthernetHelper(byte mac[6], bool writeLog) {
 	this->_mac = mac;
 	this->_writeLog = writeLog;
-	this->_client = &ethernetClient;
-	this->_reconnectionTime = reconnectionTime;
-	this->_gateway = gateway;
-	this->_actualTime = millis();
 }
 
 void EthernetHelper::fixIpSetup(IPAddress ip) {
@@ -18,6 +14,8 @@ void EthernetHelper::fixIpSetup(IPAddress ip) {
 
 	this->_mode = FIXIP;
 	this->_ip = ip;
+
+	disableSDCard();
 
 	Ethernet.begin(_mac, ip);
 
@@ -56,6 +54,8 @@ void EthernetHelper::dhcpSetup() {
 
 	this->_mode = DHCP;
 
+	disableSDCard();
+
 	Ethernet.begin(_mac); // 5000, 4000);
 
 	if (Ethernet.hardwareStatus() == EthernetNoHardware) {
@@ -88,6 +88,12 @@ void EthernetHelper::dhcpSetup() {
 	}
 }
 
+//https://blog.startingelectronics.com/disabling-the-ethernet-chip-and-sd-card-on-an-arduino-ethernet-shield/
+void EthernetHelper::disableSDCard() {
+	pinMode(4, OUTPUT);
+	digitalWrite(4, HIGH);
+}
+
 void EthernetHelper::loop() {
 
 	if (DHCP == _mode) {
@@ -95,20 +101,6 @@ void EthernetHelper::loop() {
 			// Cable disconnected or DHCP server hosed
 			writeSerial("Network reconnecting..." + String(millis()));
 			this->dhcpSetup();
-		}
-	}
-
-	if (millis() - _actualTime > _reconnectionTime) {
-		if (!_client->connected()) {
-			_actualTime = millis();
-			writeSerial("Network reconnecting..." + String(millis()));
-			if (FIXIP == _mode) {
-				this->fixIpSetup(_ip);
-			}
-			else { //DHCP
-				Ethernet.maintain();
-				this->dhcpSetup();
-			}
 		}
 	}
 }
