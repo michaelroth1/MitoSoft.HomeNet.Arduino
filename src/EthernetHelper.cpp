@@ -19,25 +19,27 @@ void EthernetHelper::fixIpSetup(IPAddress ip) {
 
 	Ethernet.begin(_mac, ip);
 
+	String shieldType = "";
+
 	if (Ethernet.hardwareStatus() == EthernetNoHardware) {
 		writeSerial("Ethernet shield was not found.");
 	}
 	else if (Ethernet.hardwareStatus() == EthernetW5100) {
+		shieldType = "W5100";
 		writeSerial("W5100 Ethernet controller detected.");
 	}
 	else if (Ethernet.hardwareStatus() == EthernetW5200) {
+		shieldType = "W5200";
 		writeSerial("W5200 Ethernet controller detected.");
 	}
 	else if (Ethernet.hardwareStatus() == EthernetW5500) {
+		shieldType = "W5500";
 		writeSerial("W5500 Ethernet controller detected.");
 	}
 
 	delay(2000);
 
-	if (Ethernet.linkStatus() == Unknown) {
-		writeSerial("Link status unknown. Link status detection is only available with W5200 and W5500.");
-	}
-	else if (Ethernet.linkStatus() == LinkON) {
+	if (Ethernet.linkStatus() == LinkON || shieldType == "W5100") {
 		writeSerial("Link status: On");
 
 		//_client->connect(_gateway, 80);
@@ -46,6 +48,9 @@ void EthernetHelper::fixIpSetup(IPAddress ip) {
 	}
 	else if (Ethernet.linkStatus() == LinkOFF) {
 		writeSerial("Link status: Off");
+	}
+	else if (Ethernet.linkStatus() == Unknown) {
+		writeSerial("Link status unknown. Link status detection is only available with W5200 and W5500.");
 	}
 }
 

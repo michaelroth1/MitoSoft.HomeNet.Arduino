@@ -239,7 +239,7 @@ private:
 
 public:
 
-	MqttHelper(MqttClient& client, unsigned long reconnectionTime = 5000, bool writeLog = false);
+	MqttHelper(MqttClient& client, unsigned long reconnectionTime = 15000, bool writeLog = false);
 
 	bool connect(IPAddress broker, String clientId, String topicPrefix);
 
@@ -259,9 +259,7 @@ class PubSubHelper
 {
 private:
 
-	static EthernetClient _ethClient;
-
-	static PubSubClient _mqttClient;
+	PubSubClient* _mqttClient = nullptr;
 
 	static bool _writeLog;
 	static String _topic;
@@ -285,9 +283,9 @@ private:
 
 public:
 
-	bool connect(char* clientId, String topicPrefix);
+	PubSubHelper(PubSubClient& client, unsigned long reconnectionTime = 15000, bool writeLog = false);
 
-	PubSubHelper(IPAddress broker, uint16_t port, unsigned long reconnectionTime = 5000, bool writeLog = false);
+	bool connect(char* clientId, String topicPrefix);
 
 	String getTopic();
 
