@@ -295,6 +295,8 @@ public:
 
 	void publish(String subtopic, String message, bool retain = false);
 
+	void publishTopic(String topic, String message, bool retain = false);
+
 	bool loop();
 };
 

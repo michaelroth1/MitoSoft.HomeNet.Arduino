@@ -116,6 +116,24 @@ void PubSubHelper::publish(String subtopic, String message, bool retain = false)
 	}
 }
 
+//Es wird nur QOS Level 0 unterstützt
+//QOS0 => Nachrichten maximal einmal liefern (Fire and forget)
+void PubSubHelper::publishTopic(String topic, String message, bool retain = false)
+{
+	if (_mqttClient->connected()) {
+				
+		char t[topic.length() + 1];
+		topic.toCharArray(t, topic.length() + 1);
+
+		char m[message.length() + 1];
+		message.toCharArray(m, message.length() + 1);
+
+		_mqttClient->publish(t, m, retain);
+
+		writeSerial("MQTT message published: Topic " + (String)topic + "; Message " + (String)message);
+	}
+}
+
 //nonblocking reconnect
 //https://github.com/knolleary/pubsubclient/blob/v2.7/examples/mqtt_reconnect_nonblocking/mqtt_reconnect_nonblocking.ino
 bool PubSubHelper::loop() {
